@@ -214,3 +214,63 @@ the number of updated state nodes that are available in the in-memory cache vs m
 If memory permits, one means of improving the efficiency of this process is to increase the in-memory trie cache allocation.
 This can be done by increasing the overall `--cache` allocation and/or by increasing the % of the cache allocated to trie
 usage with `--cache.trie`.
+
+## Versioning, Rebasing, and Releasing
+We need to keep the statediffing service rebased on the latest go-ethereum tagged releases
+
+We want to maintain a complete record of our incremental git history, but in order to make frequent and timely rebases feasible we also
+need to be able to squash our work before performing a rebase.
+
+### Versioning
+Versioning of our statediffing geth uses a combination of two versions-
+Versioning for releases of statediffing geth follow the below format:
+
+`{Root Version}-statediff-{Statediff Version}`
+
+Where `Root Version` is the version of the tagged release of the root go-ethereum repository that our repository is rebased on top of
+and `Statediff Version` is the version tracking the state of the statediffing service code
+
+E.g. the version of the statediffing service code at the time of writing this is 0.0.23, and the service is rebased
+on top of the v1.10.3 go-ethereum tagged release so the full version of statediffing geth at this time is v1.10.3-statediff-0.0.23.
+
+The `Statediff Version` is included in the `VersionMeta` in params/version.go
+
+## Branch Management
+We maintain two kinds of branches:
+
+Major Branch: `{Root Version}-statediff`
+Major branches are used for tracking the cumulative state of the statediffing code on top of the root tagged releases.
+Whenever a new root tagged release is cut (e.g. v1.10.4) we create a new major branch (v1.10.4-statediff) off of the current major branch (v1.10.3-statediff) using the new tag version.
+On this new branch we squash all our commits that occurred on the last major branch into a single commit. After this
+squash we perform the rebase on the root tagged release.
+
+e.g.
+
+A new tagged release is available: v1.10.4
+Our current statediffing major branch: v1.10.3-statediff
+Our latest statediffing feature branch and release: v1.10.3-statediff-0.0.23
+
+We create a new major branch v1.10.4-statediff off of v1.10.3-statediff.
+Ob v1.10.4-statediff we squash all of the differential from v1.10.3-statediff into a single commit.
+We rebase v1.10.4-statediff on top of the targeted tagged release (tags@v1.10.4).
+Push v1.10.4-statediff to the remote
+Checkout new feature branch off of v1.10.4-statediff using the latest feature version (v1.10.4-statediff-0.0.23)
+On this branch update the version meta, make any changes that are needed to accomodate the rebase, and update `.github/workflows/on-master.yaml` to add
+the new major branch to the on-push targets.
+PR from v1.10.4-statediff-0.0.23 to v1.10.4-statediff
+Merge PR, rebase v1.10.4-statediff-0.0.23 on top v1.10.4-statediff
+Create a v1.10.4-statediff-0.0.23 tagged release against the v1.10.4-statediff-0.0.23 branch 
+
+Feature Branch: `{Root Version}-statediff-{Statediff Version}`
+To work on our statediffing code we check out a new `Feature Branch` from the current `Major Branch` (e.g. v1.10.4-statediff),
+this branch is named as above using the current `Root Version` and the next `Statediff Version` (e.g. v1.10.4-statediff-0.0.24).
+We upstream development on these feature branches with PRs back to the `Major Branch`. Once a `Feature Branch` has been merged into the
+`Major Branch`, the `Feature Branch` is rebased ontop of the `Major Branch` and a new release is cut targeting the `Feature Branch`.
+
+
+## Major rebases
+We need to keep the statediffing service rebased on the latest go-ethereum tagged release
+
+## Release schedule
+
+When a new root release occurs we create a new branch off of the current `Full Version`
