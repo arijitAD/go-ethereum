@@ -5,7 +5,7 @@ on:
 jobs:
   push_to_registries:
     name: Publish assets to Release
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
 #      - name: Get the version
 #        id: vars
@@ -50,7 +50,10 @@ jobs:
       - name: Build static linux amd64 binary
         env:
           GO111MODULE: on
+          GOPATH: ${{ github.workspace }}
         run: |
+          go env
+          echo $GOPATH
           make geth-linux-amd64-static
       - name: Upload static linux amd64 binary
         uses: actions/upload-release-asset@v1

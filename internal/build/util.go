@@ -39,6 +39,9 @@ var DryRunFlag = flag.Bool("n", false, "dry run, don't execute commands")
 // any error.
 func MustRun(cmd *exec.Cmd) {
 	fmt.Println(">>>", strings.Join(cmd.Args, " "))
+	fmt.Println(">>>", cmd.Args)
+	fmt.Println(">>>", len(cmd.Args))
+	fmt.Println("GOPATH", os.Getenv("GOPATH"))
 	if !*DryRunFlag {
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = os.Stdout
