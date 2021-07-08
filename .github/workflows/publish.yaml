@@ -5,7 +5,7 @@ on:
 jobs:
   push_to_registries:
     name: Publish assets to Release
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
 #      - name: Get the version
 #        id: vars
@@ -51,6 +51,10 @@ jobs:
         env:
           GO111MODULE: on
         run: |
+          export GOPATH=$HOME/go
+          export GOBIN=$(go env GOPATH)/bin
+          export PATH=$PATH:$GOPATH
+          export PATH=$PATH:$GOBIN
           make geth-linux-amd64-static
       - name: Upload static linux amd64 binary
         uses: actions/upload-release-asset@v1
