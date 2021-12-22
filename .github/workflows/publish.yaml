@@ -19,18 +19,21 @@ jobs:
         with:
           context: .
           push: false
-          tags: vulcanize/vdb-geth:${{ steps.vars.outputs.tag }}
+          tags: tikarya/go-ethereum:${{ steps.vars.outputs.tag }}
           build-args: |
             GIT_COMMIT=${{ steps.vars.outputs.sha }}
 
       - name: Copy ethereum binary file
-        run: docker run --rm --entrypoint cat vulcanize/vdb-geth:${{ steps.vars.outputs.tag }} /usr/local/bin/geth > geth-linux-amd64
+        run: docker run --rm --entrypoint cat tikarya/go-ethereum:${{ steps.vars.outputs.tag }} /usr/local/bin/geth > geth-linux-amd64
 
-      - name: Docker Login to Docker Registry
-        run: echo ${{ secrets.VULCANIZEJENKINS_PAT }} | docker login -u vulcanizejenkins --password-stdin
+      - name: Docker Hub Login
+        uses: docker/login-action@v1
+        with:
+          username: tikarya
+          password: docker-hub
 
       - name: Docker Push to Docker Hub
-        run: docker push vulcanize/vdb-geth:${{steps.vars.outputs.tag}}
+        run: docker tikarya/go-ethereum:${{steps.vars.outputs.tag}}
       - name: Get release
         id: get_release
         uses: bruceadams/get-release@v1.2.0
