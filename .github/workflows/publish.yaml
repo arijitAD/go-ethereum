@@ -15,13 +15,7 @@ jobs:
       - name: Docker Login to Github Registry
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login https://docker.pkg.github.com -u vulcanize --password-stdin
       - name: Build Dokcer image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: false
-          tags: tikarya/go-ethereum:${{ steps.vars.outputs.tag }}
-          build-args: |
-            GIT_COMMIT=${{ steps.vars.outputs.sha }}
+        run: docker build -t tikarya/go-ethereum:${{ steps.vars.outputs.tag }} --build-arg GIT_COMMIT=${{ steps.vars.outputs.sha }} -f Dockerfile .
 
       - name: Copy ethereum binary file
         run: docker run --rm --entrypoint cat tikarya/go-ethereum:${{ steps.vars.outputs.tag }} /usr/local/bin/geth > geth-linux-amd64
