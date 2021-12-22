@@ -7,6 +7,7 @@ jobs:
     name: Publish assets to Release
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Get the version
         id: vars
         run: |
@@ -14,16 +15,21 @@ jobs:
           echo ::set-output name=tag::$(echo ${GITHUB_REF#refs/tags/})
       - name: Docker Login to Github Registry
         run: echo ${{ secrets.GITHUB_TOKEN }} | docker login https://docker.pkg.github.com -u vulcanize --password-stdin
-      - name: Docker Pull
-        run: docker pull docker.pkg.github.com/vulcanize/go-ethereum/go-ethereum:${{steps.vars.outputs.sha}}
+
+      - name: Build Dokcer image
+        run: docker build -t tikarya/go-ethereum:${{ steps.vars.outputs.tag }} --build-arg GIT_COMMIT=${{ steps.vars.outputs.sha }} -f Dockerfile .
+
       - name: Copy ethereum binary file
-        run: docker run --rm --entrypoint cat docker.pkg.github.com/vulcanize/go-ethereum/go-ethereum:${{steps.vars.outputs.sha}} /usr/local/bin/geth > geth-linux-amd64
-      - name: Docker Login to Docker Registry
-        run: echo ${{ secrets.VULCANIZEJENKINS_PAT }} | docker login -u vulcanizejenkins --password-stdin
-      - name: Tag docker image
-        run: docker tag docker.pkg.github.com/vulcanize/go-ethereum/go-ethereum:${{steps.vars.outputs.sha}} vulcanize/vdb-geth:${{steps.vars.outputs.tag}}
+        run: docker run --rm --entrypoint cat tikarya/go-ethereum:${{ steps.vars.outputs.tag }} /usr/local/bin/geth > geth-linux-amd64
+
+      - name: Docker Hub Login
+        uses: docker/login-action@v1
+        with:
+          username: tikarya
+          password: docker-hub
+
       - name: Docker Push to Docker Hub
-        run: docker push vulcanize/vdb-geth:${{steps.vars.outputs.tag}}
+        run: docker push tikarya/go-ethereum:${{steps.vars.outputs.tag}}
       - name: Get release
         id: get_release
         uses: bruceadams/get-release@v1.2.0
